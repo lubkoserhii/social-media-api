@@ -31,3 +31,15 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    @action(detail=True, methods=["POST"])
+    def like(self, request, pk=None):
+        post = self.get_object()
+        user = request.user
+
+        if user in post.likes.all():
+            post.likes.remove(user)
+            return Response({"detail": "Post unliked."}, status=status.HTTP_200_OK)
+        else:
+            post.likes.add(user)
+            return Response({"detail": "Post liked."}, status=status.HTTP_200_OK)
