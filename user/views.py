@@ -6,7 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
 from user.models import Profile
-from user.permissions import IsOwnerOrReadOnly
+from utils.permissions import IsOwnerOrReadOnly
 
 
 class CreateUserView(generics.CreateAPIView):
