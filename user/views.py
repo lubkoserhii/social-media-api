@@ -27,7 +27,7 @@ class ProfileViewSet(
     filter_backends = [SearchFilter]
     search_fields = ["user__username", "bio"]
 
-    @action(detail=True, methods=["POST"])
+    @action(detail=True, methods=["POST"], permission_classes=[IsAuthenticated])
     def follow(self, request, pk=None):
         profile_to_follow = self.get_object()
         current_profile = request.user.profile
@@ -44,7 +44,7 @@ class ProfileViewSet(
             status=status.HTTP_200_OK,
         )
 
-    @action(detail=True, methods=["POST"])
+    @action(detail=True, methods=["POST"], permission_classes=[IsAuthenticated])
     def unfollow(self, request, pk=None):
         profile_to_unfollow = self.get_object()
         current_profile = request.user.profile
