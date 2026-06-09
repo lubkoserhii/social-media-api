@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, viewsets, mixins, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from user.serializers import UserRegisterSerializer, ProfileSerializer
@@ -44,6 +45,11 @@ class ProfileViewSet(
             status=status.HTTP_200_OK,
         )
 
+    @extend_schema(
+        summary="Follow a user profile",
+        description="Allows the authenticated user to follow another user's profile.",
+        responses={200: dict, 400: dict},
+    )
     @action(detail=True, methods=["POST"], permission_classes=[IsAuthenticated])
     def unfollow(self, request, pk=None):
         profile_to_unfollow = self.get_object()
