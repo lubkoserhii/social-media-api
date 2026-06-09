@@ -4,8 +4,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter
-from social.models import Post
-from social.serializers import PostSerializer
+from social.models import Post, Comment
+from social.serializers import PostSerializer, CommentSerializer
 from utils.permissions import IsOwnerOrReadOnly
 
 
@@ -16,7 +16,7 @@ class PostViewSet(viewsets.ModelViewSet):
         IsOwnerOrReadOnly,
     ]
     filter_backends = [SearchFilter]
-    search_fields = ["content", "hashtags"]
+    search_fields = ["text", "hashtags"]
 
     def get_queryset(self):
         user = self.request.user
@@ -43,3 +43,12 @@ class PostViewSet(viewsets.ModelViewSet):
         else:
             post.likes.add(user)
             return Response({"detail": "Post liked."}, status=status.HTTP_200_OK)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
