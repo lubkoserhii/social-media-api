@@ -10,8 +10,8 @@ from user.serializers import ProfileSerializer, UserRegisterSerializer
 class UserRegisterSerializerTests(TestCase):
     def setUp(self):
         self.user_data = {
-            "username": "alice",
-            "email": "alice@example.com",
+            "username": "petro",
+            "email": "petro@example.com",
             "password": "test-password",
         }
 
@@ -48,8 +48,8 @@ class ProfileSerializerTests(TestCase):
             password="test-password",
         )
         self.follower_user = get_user_model().objects.create_user(
-            username="bob",
-            email="bob@example.com",
+            username="ivan",
+            email="ivan@example.com",
             password="test-password",
         )
         self.followed_user = get_user_model().objects.create_user(

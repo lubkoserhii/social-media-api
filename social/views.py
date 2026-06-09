@@ -32,7 +32,11 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @action(detail=True, methods=["POST"])
+    @action(
+        detail=True,
+        methods=["POST"],
+        permission_classes=[IsAuthenticated],
+    )
     def like(self, request, pk=None):
         post = self.get_object()
         user = request.user
