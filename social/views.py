@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -20,11 +20,19 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        following_profiles = user.profile.following.all()
+        following_profiles = user.profile.following.select_related("user")
         following_users = [profile.user for profile in following_profiles]
 
         return (
             Post.objects.filter(Q(author=user) | Q(author__in=following_users))
+            .select_related("author")
+            .prefetch_related(
+                "likes",
+                Prefetch(
+                    "comments",
+                    queryset=Comment.objects.select_related("author"),
+                ),
+            )
             .distinct()
             .order_by("-created_at")
         )
@@ -50,7 +58,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
+    queryset = Comment.objects.select_related("author")
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 

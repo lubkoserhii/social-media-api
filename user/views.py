@@ -22,7 +22,10 @@ class ProfileViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = Profile.objects.all()
+    queryset = Profile.objects.select_related("user").prefetch_related(
+        "followers",
+        "following",
+    )
     serializer_class = ProfileSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     filter_backends = [SearchFilter]
