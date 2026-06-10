@@ -47,6 +47,26 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
     @action(
+        detail=False,
+        methods=["GET"],
+        permission_classes=[IsAuthenticated],
+    )
+    def liked(self, request):
+        posts = (
+            request.user.liked_posts.select_related("author")
+            .prefetch_related(
+                "likes",
+                Prefetch(
+                    "comments",
+                    queryset=Comment.objects.select_related("author"),
+                ),
+            )
+            .order_by("-created_at")
+        )
+        serializer = self.get_serializer(posts, many=True)
+        return Response(serializer.data)
+
+    @action(
         detail=True,
         methods=["POST"],
         permission_classes=[IsAuthenticated],
