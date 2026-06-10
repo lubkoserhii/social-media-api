@@ -82,3 +82,58 @@ class ProfileFollowActionsTests(APITestCase):
             response.data,
             {"detail": "You are not following this user."},
         )
+
+
+class LogoutTests(APITestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="logout-user",
+            email="logout@example.com",
+            password="test-password",
+        )
+        Profile.objects.create(user=self.user)
+
+    def test_logout_revokes_tokens_until_next_login(self):
+        login_response = self.client.post(
+            reverse("user:token_obtain_pair"),
+            {
+                "email": self.user.email,
+                "password": "test-password",
+            },
+        )
+        access = login_response.data["access"]
+        refresh = login_response.data["refresh"]
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+
+        logout_response = self.client.post(reverse("user:logout"))
+
+        self.assertEqual(logout_response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(
+            self.client.get(reverse("user:profile-list")).status_code,
+            status.HTTP_401_UNAUTHORIZED,
+        )
+        self.assertEqual(
+            self.client.post(
+                reverse("user:token_refresh"),
+                {"refresh": refresh},
+            ).status_code,
+            status.HTTP_401_UNAUTHORIZED,
+        )
+
+        self.client.credentials()
+        new_login_response = self.client.post(
+            reverse("user:token_obtain_pair"),
+            {
+                "email": self.user.email,
+                "password": "test-password",
+            },
+        )
+        self.assertEqual(new_login_response.status_code, status.HTTP_200_OK)
+
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {new_login_response.data['access']}"
+        )
+        self.assertEqual(
+            self.client.get(reverse("user:profile-list")).status_code,
+            status.HTTP_200_OK,
+        )
