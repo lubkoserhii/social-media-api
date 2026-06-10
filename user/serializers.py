@@ -35,7 +35,11 @@ class LogoutSerializer(serializers.Serializer):
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=5)
+    password = serializers.CharField(
+        write_only=True,
+        min_length=5,
+        style={"input_type": "password"},
+    )
 
     class Meta:
         model = get_user_model()
