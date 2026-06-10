@@ -1,8 +1,37 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.token_blacklist.models import (
+    BlacklistedToken,
+    OutstandingToken,
+)
 
 from user.models import Profile
+
+
+class UserTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["token_version"] = user.token_version
+        return token
+
+
+class LogoutSerializer(serializers.Serializer):
+    @transaction.atomic
+    def save(self, **kwargs):
+        user = (
+            get_user_model()
+            .objects.select_for_update()
+            .get(pk=self.context["request"].user.pk)
+        )
+
+        for token in OutstandingToken.objects.filter(user=user):
+            BlacklistedToken.objects.get_or_create(token=token)
+
+        user.token_version += 1
+        user.save(update_fields=["token_version"])
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):

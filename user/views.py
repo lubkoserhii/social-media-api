@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from drf_spectacular.utils import extend_schema
 from rest_framework import generics, viewsets, mixins, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from user.serializers import UserRegisterSerializer, ProfileSerializer
+from user.serializers import LogoutSerializer, UserRegisterSerializer, ProfileSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.filters import SearchFilter
@@ -14,6 +14,17 @@ class CreateUserView(generics.CreateAPIView):
     serializer_class = UserRegisterSerializer
     queryset = get_user_model().objects.all()
     permission_classes = (AllowAny,)
+
+
+class LogoutView(generics.GenericAPIView):
+    serializer_class = LogoutSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ProfileViewSet(

@@ -5,6 +5,7 @@ from django.db import models
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
+    token_version = models.PositiveIntegerField(default=0)
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
