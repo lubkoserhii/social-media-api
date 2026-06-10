@@ -46,6 +46,32 @@ class ProfileViewSet(
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    @action(detail=False, methods=["GET"], permission_classes=[IsAuthenticated])
+    def following(self, request):
+        current_profile = Profile.objects.filter(user=request.user).first()
+
+        if current_profile is None:
+            return Response(
+                {"detail": "Create your profile to view followed users."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = self.get_serializer(current_profile.following.all(), many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=["GET"], permission_classes=[IsAuthenticated])
+    def followers(self, request):
+        current_profile = Profile.objects.filter(user=request.user).first()
+
+        if current_profile is None:
+            return Response(
+                {"detail": "Create your profile to view followers."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = self.get_serializer(current_profile.followers.all(), many=True)
+        return Response(serializer.data)
+
     @action(detail=True, methods=["POST"], permission_classes=[IsAuthenticated])
     def follow(self, request, pk=None):
         profile_to_follow = self.get_object()
