@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter
 from social.models import Post, Comment
 from social.serializers import PostSerializer, CommentSerializer
+from user.models import Profile
 from utils.permissions import IsOwnerOrReadOnly
 
 
@@ -20,7 +21,12 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        following_profiles = user.profile.following.select_related("user")
+        profile = getattr(user, "profile", None)
+        following_profiles = (
+            profile.following.select_related("user")
+            if profile
+            else Profile.objects.none()
+        )
         following_users = [profile.user for profile in following_profiles]
 
         return (

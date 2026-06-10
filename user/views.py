@@ -28,6 +28,7 @@ class LogoutView(generics.GenericAPIView):
 
 
 class ProfileViewSet(
+    mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
@@ -42,10 +43,19 @@ class ProfileViewSet(
     filter_backends = [SearchFilter]
     search_fields = ["user__username", "bio"]
 
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
     @action(detail=True, methods=["POST"], permission_classes=[IsAuthenticated])
     def follow(self, request, pk=None):
         profile_to_follow = self.get_object()
-        current_profile = request.user.profile
+        current_profile = Profile.objects.filter(user=request.user).first()
+
+        if current_profile is None:
+            return Response(
+                {"detail": "Create your profile before following users."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if current_profile == profile_to_follow:
             return Response(
@@ -67,7 +77,13 @@ class ProfileViewSet(
     @action(detail=True, methods=["POST"], permission_classes=[IsAuthenticated])
     def unfollow(self, request, pk=None):
         profile_to_unfollow = self.get_object()
-        current_profile = request.user.profile
+        current_profile = Profile.objects.filter(user=request.user).first()
+
+        if current_profile is None:
+            return Response(
+                {"detail": "Create your profile before unfollowing users."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if profile_to_unfollow in current_profile.following.all():
             current_profile.following.remove(profile_to_unfollow)

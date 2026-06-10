@@ -42,10 +42,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         fields = ("id", "email", "username", "password")
 
     def create(self, validated_data):
-        with transaction.atomic():
-            user = get_user_model().objects.create_user(**validated_data)
-            Profile.objects.create(user=user)
-            return user
+        return get_user_model().objects.create_user(**validated_data)
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -65,3 +62,13 @@ class ProfileSerializer(serializers.ModelSerializer):
             "followers_count",
             "following_count",
         )
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        if (
+            self.instance is None
+            and request
+            and Profile.objects.filter(user=request.user).exists()
+        ):
+            raise serializers.ValidationError("You already have a profile.")
+        return attrs
