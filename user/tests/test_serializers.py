@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
@@ -15,29 +13,14 @@ class UserRegisterSerializerTests(TestCase):
             "password": "test-password",
         }
 
-    def test_create_user_also_creates_profile(self):
+    def test_create_user_does_not_create_profile(self):
         serializer = UserRegisterSerializer(data=self.user_data)
 
         self.assertTrue(serializer.is_valid(), serializer.errors)
         user = serializer.save()
 
         self.assertTrue(user.check_password(self.user_data["password"]))
-        self.assertTrue(Profile.objects.filter(user=user).exists())
-
-    def test_create_user_and_profile_is_atomic(self):
-        serializer = UserRegisterSerializer(data=self.user_data)
-        serializer.is_valid(raise_exception=True)
-
-        with patch(
-            "user.serializers.Profile.objects.create",
-            side_effect=RuntimeError("Profile creation failed"),
-        ):
-            with self.assertRaises(RuntimeError):
-                serializer.save()
-
-        self.assertFalse(
-            get_user_model().objects.filter(email=self.user_data["email"]).exists()
-        )
+        self.assertFalse(Profile.objects.filter(user=user).exists())
 
 
 class ProfileSerializerTests(TestCase):

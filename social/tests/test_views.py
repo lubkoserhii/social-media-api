@@ -95,3 +95,19 @@ class SocialViewsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"detail": "Post unliked."})
         self.assertNotIn(self.user, post.likes.all())
+
+
+class SocialViewsWithoutProfileTests(APITestCase):
+    def test_post_list_returns_own_posts_without_profile(self):
+        user = get_user_model().objects.create_user(
+            username="without-profile",
+            email="without-profile@example.com",
+            password="test-password",
+        )
+        own_post = Post.objects.create(author=user, text="Own post")
+        self.client.force_authenticate(user)
+
+        response = self.client.get(reverse("social:post-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([post["id"] for post in response.data], [own_post.id])

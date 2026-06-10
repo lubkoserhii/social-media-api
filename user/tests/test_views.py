@@ -1,9 +1,46 @@
+from tempfile import TemporaryDirectory
+
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from user.models import Profile
+
+
+class ProfileCreateUpdateTests(APITestCase):
+    def setUp(self):
+        self.media_directory = TemporaryDirectory()
+        self.addCleanup(self.media_directory.cleanup)
+        self.media_override = override_settings(MEDIA_ROOT=self.media_directory.name)
+        self.media_override.enable()
+        self.addCleanup(self.media_override.disable)
+
+        self.user = get_user_model().objects.create_user(
+            username="profile-owner",
+            email="profile-owner@example.com",
+            password="test-password",
+        )
+        self.client.force_authenticate(self.user)
+
+    def test_user_creates_own_profile(self):
+        response = self.client.post(
+            reverse("user:profile-list"),
+            {"bio": "My profile"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        profile = Profile.objects.get(user=self.user)
+        self.assertEqual(profile.bio, "My profile")
+
+    def test_user_cannot_create_second_profile(self):
+        Profile.objects.create(user=self.user)
+
+        response = self.client.post(reverse("user:profile-list"), {})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Profile.objects.filter(user=self.user).count(), 1)
 
 
 class ProfileFollowActionsTests(APITestCase):
