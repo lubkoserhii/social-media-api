@@ -120,6 +120,24 @@ class ProfileFollowActionsTests(APITestCase):
             {"detail": "You are not following this user."},
         )
 
+    def test_view_following_profiles(self):
+        self.profile.following.add(self.other_profile)
+
+        response = self.client.get(reverse("user:profile-following"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], self.other_profile.pk)
+
+    def test_view_follower_profiles(self):
+        self.other_profile.following.add(self.profile)
+
+        response = self.client.get(reverse("user:profile-followers"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], self.other_profile.pk)
+
 
 class LogoutTests(APITestCase):
     def setUp(self):
