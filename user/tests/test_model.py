@@ -6,7 +6,7 @@ from user.models import Profile
 
 
 class UserModelsTests(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.user = get_user_model().objects.create_user(
             username="alice",
             email="alice@example.com",
@@ -20,10 +20,10 @@ class UserModelsTests(TestCase):
         self.profile = Profile.objects.create(user=self.user)
         self.other_profile = Profile.objects.create(user=self.other_user)
 
-    def test_email_is_used_as_username_field(self):
+    def test_email_is_used_as_username_field(self) -> None:
         self.assertEqual(get_user_model().USERNAME_FIELD, "email")
 
-    def test_email_must_be_unique(self):
+    def test_email_must_be_unique(self) -> None:
         with self.assertRaises(IntegrityError), transaction.atomic():
             get_user_model().objects.create_user(
                 username="another-alice",
@@ -31,7 +31,7 @@ class UserModelsTests(TestCase):
                 password="test-password",
             )
 
-    def test_profile_can_follow_another_profile(self):
+    def test_profile_can_follow_another_profile(self) -> None:
         self.profile.following.add(self.other_profile)
 
         self.assertIn(self.other_profile, self.profile.following.all())

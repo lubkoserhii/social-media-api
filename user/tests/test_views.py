@@ -10,7 +10,7 @@ from user.models import Profile
 
 
 class ProfileCreateUpdateTests(APITestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.media_directory = TemporaryDirectory()
         self.addCleanup(self.media_directory.cleanup)
         self.media_override = override_settings(MEDIA_ROOT=self.media_directory.name)
@@ -24,7 +24,7 @@ class ProfileCreateUpdateTests(APITestCase):
         )
         self.client.force_authenticate(self.user)
 
-    def test_user_creates_own_profile(self):
+    def test_user_creates_own_profile(self) -> None:
         response = self.client.post(
             reverse("user:profile-list"),
             {"bio": "My profile"},
@@ -34,7 +34,7 @@ class ProfileCreateUpdateTests(APITestCase):
         profile = Profile.objects.get(user=self.user)
         self.assertEqual(profile.bio, "My profile")
 
-    def test_user_cannot_create_second_profile(self):
+    def test_user_cannot_create_second_profile(self) -> None:
         Profile.objects.create(user=self.user)
 
         response = self.client.post(reverse("user:profile-list"), {})
@@ -44,7 +44,7 @@ class ProfileCreateUpdateTests(APITestCase):
 
 
 class ProfileFollowActionsTests(APITestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.user = get_user_model().objects.create_user(
             username="alice",
             email="alice@example.com",
@@ -59,7 +59,7 @@ class ProfileFollowActionsTests(APITestCase):
         self.other_profile = Profile.objects.create(user=self.other_user)
         self.client.force_authenticate(self.user)
 
-    def test_follow_profile(self):
+    def test_follow_profile(self) -> None:
         response = self.client.post(
             reverse(
                 "user:profile-follow",
@@ -74,7 +74,7 @@ class ProfileFollowActionsTests(APITestCase):
         )
         self.assertIn(self.other_profile, self.profile.following.all())
 
-    def test_cannot_follow_own_profile(self):
+    def test_cannot_follow_own_profile(self) -> None:
         response = self.client.post(
             reverse(
                 "user:profile-follow",
@@ -89,7 +89,7 @@ class ProfileFollowActionsTests(APITestCase):
         )
         self.assertNotIn(self.profile, self.profile.following.all())
 
-    def test_unfollow_profile(self):
+    def test_unfollow_profile(self) -> None:
         self.profile.following.add(self.other_profile)
 
         response = self.client.post(
@@ -106,7 +106,7 @@ class ProfileFollowActionsTests(APITestCase):
         )
         self.assertNotIn(self.other_profile, self.profile.following.all())
 
-    def test_cannot_unfollow_profile_that_is_not_followed(self):
+    def test_cannot_unfollow_profile_that_is_not_followed(self) -> None:
         response = self.client.post(
             reverse(
                 "user:profile-unfollow",
@@ -120,7 +120,7 @@ class ProfileFollowActionsTests(APITestCase):
             {"detail": "You are not following this user."},
         )
 
-    def test_view_following_profiles(self):
+    def test_view_following_profiles(self) -> None:
         self.profile.following.add(self.other_profile)
 
         response = self.client.get(reverse("user:profile-following"))
@@ -129,7 +129,7 @@ class ProfileFollowActionsTests(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.other_profile.pk)
 
-    def test_view_follower_profiles(self):
+    def test_view_follower_profiles(self) -> None:
         self.other_profile.following.add(self.profile)
 
         response = self.client.get(reverse("user:profile-followers"))
@@ -140,7 +140,7 @@ class ProfileFollowActionsTests(APITestCase):
 
 
 class LogoutTests(APITestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.user = get_user_model().objects.create_user(
             username="logout-user",
             email="logout@example.com",
@@ -148,7 +148,7 @@ class LogoutTests(APITestCase):
         )
         Profile.objects.create(user=self.user)
 
-    def test_logout_revokes_tokens_until_next_login(self):
+    def test_logout_revokes_tokens_until_next_login(self) -> None:
         login_response = self.client.post(
             reverse("user:token_obtain_pair"),
             {

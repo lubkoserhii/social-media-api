@@ -8,7 +8,7 @@ from user.models import Profile
 
 
 class SocialViewsTests(APITestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.user = get_user_model().objects.create_user(
             username="alice",
             email="alice@example.com",
@@ -30,7 +30,7 @@ class SocialViewsTests(APITestCase):
         self.profile.following.add(self.followed_profile)
         self.client.force_authenticate(self.user)
 
-    def test_post_list_contains_own_and_followed_users_posts(self):
+    def test_post_list_contains_own_and_followed_users_posts(self) -> None:
         own_post = Post.objects.create(author=self.user, text="Own post")
         followed_post = Post.objects.create(
             author=self.followed_user,
@@ -46,7 +46,7 @@ class SocialViewsTests(APITestCase):
             [followed_post.id, own_post.id],
         )
 
-    def test_create_post_assigns_authenticated_user_as_author(self):
+    def test_create_post_assigns_authenticated_user_as_author(self) -> None:
         response = self.client.post(
             reverse("social:post-list"),
             {"text": "New post"},
@@ -56,7 +56,7 @@ class SocialViewsTests(APITestCase):
         post = Post.objects.get(pk=response.data["id"])
         self.assertEqual(post.author, self.user)
 
-    def test_create_comment_assigns_authenticated_user_as_author(self):
+    def test_create_comment_assigns_authenticated_user_as_author(self) -> None:
         post = Post.objects.create(
             author=self.followed_user,
             text="Post with a comment",
@@ -71,7 +71,7 @@ class SocialViewsTests(APITestCase):
         comment = Comment.objects.get(pk=response.data["id"])
         self.assertEqual(comment.author, self.user)
 
-    def test_like_followed_users_post(self):
+    def test_like_followed_users_post(self) -> None:
         post = Post.objects.create(
             author=self.followed_user,
             text="Post to like",
@@ -83,7 +83,7 @@ class SocialViewsTests(APITestCase):
         self.assertEqual(response.data, {"detail": "Post liked."})
         self.assertIn(self.user, post.likes.all())
 
-    def test_like_action_removes_existing_like(self):
+    def test_like_action_removes_existing_like(self) -> None:
         post = Post.objects.create(
             author=self.followed_user,
             text="Liked post",
@@ -96,7 +96,7 @@ class SocialViewsTests(APITestCase):
         self.assertEqual(response.data, {"detail": "Post unliked."})
         self.assertNotIn(self.user, post.likes.all())
 
-    def test_view_liked_posts(self):
+    def test_view_liked_posts(self) -> None:
         liked_post = Post.objects.create(
             author=self.other_user,
             text="Liked post from another user",
@@ -114,7 +114,7 @@ class SocialViewsTests(APITestCase):
 
 
 class SocialViewsWithoutProfileTests(APITestCase):
-    def test_post_list_returns_own_posts_without_profile(self):
+    def test_post_list_returns_own_posts_without_profile(self) -> None:
         user = get_user_model().objects.create_user(
             username="without-profile",
             email="without-profile@example.com",

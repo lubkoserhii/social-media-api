@@ -6,14 +6,14 @@ from user.serializers import ProfileSerializer, UserRegisterSerializer
 
 
 class UserRegisterSerializerTests(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.user_data = {
             "username": "petro",
             "email": "petro@example.com",
             "password": "test-password",
         }
 
-    def test_create_user_does_not_create_profile(self):
+    def test_create_user_does_not_create_profile(self) -> None:
         serializer = UserRegisterSerializer(data=self.user_data)
 
         self.assertTrue(serializer.is_valid(), serializer.errors)
@@ -24,7 +24,7 @@ class UserRegisterSerializerTests(TestCase):
 
 
 class ProfileSerializerTests(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.user = get_user_model().objects.create_user(
             username="alice",
             email="alice@example.com",
@@ -44,7 +44,7 @@ class ProfileSerializerTests(TestCase):
         self.follower_profile = Profile.objects.create(user=self.follower_user)
         self.followed_profile = Profile.objects.create(user=self.followed_user)
 
-    def test_serializes_user_data_and_follow_counts(self):
+    def test_serializes_user_data_and_follow_counts(self) -> None:
         self.follower_profile.following.add(self.profile)
         self.profile.following.add(self.followed_profile)
 

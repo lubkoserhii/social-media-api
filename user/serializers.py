@@ -1,3 +1,6 @@
+from typing import Any
+
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import serializers
@@ -6,13 +9,14 @@ from rest_framework_simplejwt.token_blacklist.models import (
     BlacklistedToken,
     OutstandingToken,
 )
+from rest_framework_simplejwt.tokens import Token
 
 from user.models import Profile
 
 
 class UserTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
-    def get_token(cls, user):
+    def get_token(cls, user) -> Token:
         token = super().get_token(user)
         token["token_version"] = user.token_version
         return token
@@ -20,7 +24,7 @@ class UserTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 class LogoutSerializer(serializers.Serializer):
     @transaction.atomic
-    def save(self, **kwargs):
+    def save(self, **kwargs: Any) -> None:
         user = (
             get_user_model()
             .objects.select_for_update()
@@ -45,7 +49,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ("id", "email", "username", "password")
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict[str, Any]) -> AbstractBaseUser:
         return get_user_model().objects.create_user(**validated_data)
 
 
@@ -67,7 +71,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "following_count",
         )
 
-    def validate(self, attrs):
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         request = self.context.get("request")
         if (
             self.instance is None

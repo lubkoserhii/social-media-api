@@ -1,4 +1,5 @@
 from django.db.models import Prefetch, Q
+from django.db.models.query import QuerySet
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -19,7 +20,7 @@ class PostViewSet(viewsets.ModelViewSet):
     filter_backends = [SearchFilter]
     search_fields = ["text", "hashtags"]
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet[Post]:
         user = self.request.user
         profile = getattr(user, "profile", None)
         following_profiles = (
@@ -43,7 +44,7 @@ class PostViewSet(viewsets.ModelViewSet):
             .order_by("-created_at")
         )
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer) -> None:
         serializer.save(author=self.request.user)
 
     @action(
@@ -51,7 +52,7 @@ class PostViewSet(viewsets.ModelViewSet):
         methods=["GET"],
         permission_classes=[IsAuthenticated],
     )
-    def liked(self, request):
+    def liked(self, request) -> Response:
         posts = (
             request.user.liked_posts.select_related("author")
             .prefetch_related(
@@ -71,7 +72,7 @@ class PostViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         permission_classes=[IsAuthenticated],
     )
-    def like(self, request, pk=None):
+    def like(self, request, pk=None) -> Response:
         post = self.get_object()
         user = request.user
 
@@ -88,5 +89,5 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer) -> None:
         serializer.save(author=self.request.user)

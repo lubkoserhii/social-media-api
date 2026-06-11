@@ -20,7 +20,7 @@ class LogoutView(generics.GenericAPIView):
     serializer_class = LogoutSerializer
     permission_classes = (IsAuthenticated,)
 
-    def post(self, request):
+    def post(self, request) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -43,11 +43,11 @@ class ProfileViewSet(
     filter_backends = [SearchFilter]
     search_fields = ["user__username", "bio"]
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer) -> None:
         serializer.save(user=self.request.user)
 
     @action(detail=False, methods=["GET"], permission_classes=[IsAuthenticated])
-    def following(self, request):
+    def following(self, request) -> Response:
         current_profile = Profile.objects.filter(user=request.user).first()
 
         if current_profile is None:
@@ -60,7 +60,7 @@ class ProfileViewSet(
         return Response(serializer.data)
 
     @action(detail=False, methods=["GET"], permission_classes=[IsAuthenticated])
-    def followers(self, request):
+    def followers(self, request) -> Response:
         current_profile = Profile.objects.filter(user=request.user).first()
 
         if current_profile is None:
@@ -73,7 +73,7 @@ class ProfileViewSet(
         return Response(serializer.data)
 
     @action(detail=True, methods=["POST"], permission_classes=[IsAuthenticated])
-    def follow(self, request, pk=None):
+    def follow(self, request, pk=None) -> Response:
         profile_to_follow = self.get_object()
         current_profile = Profile.objects.filter(user=request.user).first()
 
@@ -101,7 +101,7 @@ class ProfileViewSet(
         responses={200: dict, 400: dict},
     )
     @action(detail=True, methods=["POST"], permission_classes=[IsAuthenticated])
-    def unfollow(self, request, pk=None):
+    def unfollow(self, request, pk=None) -> Response:
         profile_to_unfollow = self.get_object()
         current_profile = Profile.objects.filter(user=request.user).first()
 

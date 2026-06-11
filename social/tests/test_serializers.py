@@ -6,7 +6,7 @@ from social.serializers import CommentSerializer, PostSerializer
 
 
 class SocialSerializersTests(TestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.author = get_user_model().objects.create_user(
             username="alice",
             email="alice@example.com",
@@ -28,12 +28,12 @@ class SocialSerializersTests(TestCase):
         )
         self.post.likes.add(self.other_user)
 
-    def test_comment_serializer_includes_author_email(self):
+    def test_comment_serializer_includes_author_email(self) -> None:
         data = CommentSerializer(self.comment).data
 
         self.assertEqual(data["author_email"], self.other_user.email)
 
-    def test_post_serializer_includes_custom_related_data(self):
+    def test_post_serializer_includes_custom_related_data(self) -> None:
         data = PostSerializer(self.post).data
 
         self.assertEqual(data["author_email"], self.author.email)
