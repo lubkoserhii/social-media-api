@@ -34,9 +34,9 @@ API documentation is available after starting the project:
 - ReDoc: `http://127.0.0.1:8000/api/schema/redoc/`
 - OpenAPI schema: `http://127.0.0.1:8000/api/schema/`
 
-## Local Setup
+## Docker Setup
 
-Python and Git must be installed.
+Docker and Git must be installed.
 
 1. Clone the repository and navigate to the project directory:
 
@@ -44,42 +44,31 @@ Python and Git must be installed.
 git clone <repository-url>
 ```
 
-2. Create and activate a virtual environment:
+2. Create the environment file and replace the example secrets:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
+cp .env.example .env
 ```
 
-On Windows:
-
-```powershell
-.venv\Scripts\activate
-```
-
-3. Install the dependencies:
+3. Build and start the application with PostgreSQL:
 
 ```bash
-python -m pip install -r requirements.txt
+docker compose up --build
 ```
 
-4. Apply the migrations:
+The database migrations run automatically. The API will be available at
+`http://127.0.0.1:8000/`.
+
+To stop the services:
 
 ```bash
-python manage.py migrate
+docker compose down
 ```
 
-5. Start the development server:
 
-```bash
-python manage.py runserver
-```
-
-The API will be available at `http://127.0.0.1:8000/`.
-The project uses SQLite by default.
 
 ## Tests
 
 ```bash
-python manage.py test
+docker compose run --rm web python manage.py test
 ```
