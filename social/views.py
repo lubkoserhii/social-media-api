@@ -1,0 +1,93 @@
+from django.db.models import Prefetch, Q
+from django.db.models.query import QuerySet
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.filters import SearchFilter
+from social.models import Post, Comment
+from social.serializers import PostSerializer, CommentSerializer
+from user.models import Profile
+from utils.permissions import IsOwnerOrReadOnly
+
+
+class PostViewSet(viewsets.ModelViewSet):
+    serializer_class = PostSerializer
+    permission_classes = [
+        IsAuthenticated,
+        IsOwnerOrReadOnly,
+    ]
+    filter_backends = [SearchFilter]
+    search_fields = ["text", "hashtags"]
+
+    def get_queryset(self) -> QuerySet[Post]:
+        user = self.request.user
+        profile = getattr(user, "profile", None)
+        following_profiles = (
+            profile.following.select_related("user")
+            if profile
+            else Profile.objects.none()
+        )
+        following_users = [profile.user for profile in following_profiles]
+
+        return (
+            Post.objects.filter(Q(author=user) | Q(author__in=following_users))
+            .select_related("author")
+            .prefetch_related(
+                "likes",
+                Prefetch(
+                    "comments",
+                    queryset=Comment.objects.select_related("author"),
+                ),
+            )
+            .distinct()
+            .order_by("-created_at")
+        )
+
+    def perform_create(self, serializer) -> None:
+        serializer.save(author=self.request.user)
+
+    @action(
+        detail=False,
+        methods=["GET"],
+        permission_classes=[IsAuthenticated],
+    )
+    def liked(self, request) -> Response:
+        posts = (
+            request.user.liked_posts.select_related("author")
+            .prefetch_related(
+                "likes",
+                Prefetch(
+                    "comments",
+                    queryset=Comment.objects.select_related("author"),
+                ),
+            )
+            .order_by("-created_at")
+        )
+        serializer = self.get_serializer(posts, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=True,
+        methods=["POST"],
+        permission_classes=[IsAuthenticated],
+    )
+    def like(self, request, pk=None) -> Response:
+        post = self.get_object()
+        user = request.user
+
+        if user in post.likes.all():
+            post.likes.remove(user)
+            return Response({"detail": "Post unliked."}, status=status.HTTP_200_OK)
+        else:
+            post.likes.add(user)
+            return Response({"detail": "Post liked."}, status=status.HTTP_200_OK)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.select_related("author")
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+    def perform_create(self, serializer) -> None:
+        serializer.save(author=self.request.user)
